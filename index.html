@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Térmico en Horno de Reflujo SMD | ELEC-5308</title>
+<script>
+window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] }, svg: { fontCache: 'global' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+:root{
+  --bg:#0d0f14; --panel:#151922; --panel2:#1b2030; --line:#2a3142;
+  --txt:#e7eaf0; --mut:#9aa3b5; --heat:#ff7a1a; --heat2:#ffb067; --cool:#3fb6ff; --ok:#46d39a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+a{color:var(--heat2)}
+nav{position:sticky;top:0;z-index:50;background:rgba(13,15,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .in{max-width:1150px;margin:auto;display:flex;gap:6px;align-items:center;padding:10px 18px;overflow-x:auto}
+nav .brand{font-weight:700;color:var(--heat);margin-right:12px;white-space:nowrap}
+nav a{color:var(--mut);text-decoration:none;padding:6px 12px;border-radius:8px;font-size:.9rem;white-space:nowrap}
+nav a:hover,nav a.act{background:var(--panel2);color:var(--txt)}
+header{position:relative;overflow:hidden;padding:90px 18px 70px;text-align:center;border-bottom:1px solid var(--line);
+  background:radial-gradient(ellipse at 50% 120%,rgba(255,122,26,.35),transparent 60%),radial-gradient(ellipse at 10% -20%,rgba(63,182,255,.15),transparent 50%)}
+header .tag{display:inline-block;border:1px solid var(--heat);color:var(--heat2);padding:4px 14px;border-radius:30px;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase}
+header h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.15;margin:18px auto 12px;max-width:900px}
+header h1 span{color:var(--heat)}
+header p{color:var(--mut);max-width:720px;margin:auto}
+.meta{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px}
+.meta div{background:var(--panel);border:1px solid var(--line);padding:8px 16px;border-radius:10px;font-size:.88rem}
+.meta b{color:var(--heat2)}
+section{max-width:1150px;margin:auto;padding:70px 18px 30px}
+.num{color:var(--heat);font-weight:700;font-size:.85rem;letter-spacing:.15em}
+h2{font-size:1.9rem;margin:4px 0 18px}
+h3{font-size:1.15rem;margin:22px 0 10px;color:var(--heat2)}
+p{margin-bottom:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin:16px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:850px){.grid2,.grid3{grid-template-columns:1fr}}
+.comp{background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--heat);border-radius:10px;padding:14px 16px}
+.comp b{display:block;color:var(--heat2);margin-bottom:4px}
+.comp.s{border-left-color:var(--cool)} .comp.s b{color:var(--cool)}
+.comp.d{border-left-color:#ff5470} .comp.d b{color:#ff8aa0}
+.comp.c{border-left-color:var(--ok)} .comp.c b{color:var(--ok)}
+.comp small{color:var(--mut)}
+svg text{font-family:system-ui,Arial,sans-serif}
+.blk{cursor:pointer;transition:.2s}
+.blk:hover rect{stroke:var(--heat)!important;filter:drop-shadow(0 0 6px rgba(255,122,26,.6))}
+#info{min-height:56px;background:var(--panel2);border-radius:10px;padding:12px 16px;color:var(--mut);border:1px dashed var(--line)}
+#info b{color:var(--txt)}
+.eq{background:var(--panel2);border-radius:10px;padding:14px;margin:10px 0;overflow-x:auto}
+.note{border-left:4px solid var(--cool);background:rgba(63,182,255,.07);padding:12px 16px;border-radius:8px;margin:14px 0;color:#cfe8ff}
+table{width:100%;border-collapse:collapse;font-size:.93rem}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left}
+th{color:var(--heat2);font-weight:600}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.steps button,.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.9rem}
+.steps button.act,.btn:hover{background:var(--heat);border-color:var(--heat);color:#111}
+.step{display:none}.step.act{display:block;animation:fade .4s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.sim{display:grid;grid-template-columns:320px 1fr;gap:18px}
+@media(max-width:900px){.sim{grid-template-columns:1fr}}
+.ctrl label{display:flex;justify-content:space-between;font-size:.88rem;color:var(--mut);margin-top:14px}
+.ctrl label span{color:var(--txt);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--heat)}
+.chk{display:flex;gap:8px;align-items:center;margin-top:16px;font-size:.9rem}
+canvas{width:100%;background:#0f131b;border-radius:10px;border:1px solid var(--line);display:block}
+#plot{height:360px} #pz{height:190px}
+.read{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+@media(max-width:700px){.read{grid-template-columns:repeat(2,1fr)}}
+.read div{background:var(--panel2);border-radius:10px;padding:10px;text-align:center}
+.read small{display:block;color:var(--mut);font-size:.75rem}
+.read b{font-size:1.05rem}
+.ol{color:var(--heat)} .cl{color:var(--cool)}
+pre{background:#0a0c10;border:1px solid var(--line);border-radius:10px;padding:16px;overflow:auto;font-size:.82rem;max-height:480px;color:#d6dbe6}
+.cbar{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+figure{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+figure img{max-width:100%;border-radius:6px;background:#fff}
+figure figcaption{font-size:.85rem;color:var(--mut);margin-top:6px}
+figure.missing img{display:none}
+figure.missing::before{content:"Captura pendiente";display:block;padding:60px 0;color:var(--mut)}
+.concl li{margin:8px 0 8px 20px}
+footer{text-align:center;color:var(--mut);padding:40px 18px;border-top:1px solid var(--line);margin-top:50px;font-size:.88rem}
+</style>
+</head>
+<body>
+
+<nav><div class="in">
+  <span class="brand">Horno de Reflujo</span>
+  <a href="#s1">1. Contexto</a>
+  <a href="#s2">2. Modelado</a>
+  <a href="#s3">3. Diagramas</a>
+  <a href="#s4">4. Simulador y Octave</a>
+  <a href="#s5">5. Estabilidad</a>
+</div></nav>
+
+<header>
+  <span class="tag">Proyecto de Investigación Aplicada · Tema 4</span>
+  <h1>Control Térmico en <span>Hornos Industriales de Reflujo SMD</span></h1>
+  <p>Cómo la Transformada de Laplace, el álgebra de bloques y el análisis de polos permiten controlar la temperatura con la que se sueldan las tarjetas electrónicas.</p>
+  <div class="meta">
+    <div>Estudiante: <b>Daniel Miranda Martínez</b></div>
+    <div>Curso: <b>Análisis de Sistemas (ELEC-5308)</b></div>
+    <div>Docente: <b>Prof. Herberth Córdoba Alvarez</b></div>
+    <div>Universidad Hispanoamericana · 2026</div>
+  </div>
+</header>
+
+<!-- ================= 1 ================= -->
+<section id="s1">
+  <div class="num">SECCIÓN 1</div>
+  <h2>Contexto Industrial y Arquitectura de Control</h2>
+  <div class="grid2">
+    <div>
+      <p>En la fabricación de tarjetas electrónicas, los componentes SMD (de montaje superficial) se colocan sobre una pasta de soldadura. Luego la tarjeta pasa por un <b>horno de reflujo</b> sobre una banda transportadora, donde se calienta hasta que la pasta se derrite y suelda los componentes.</p>
+      <p>La temperatura debe seguir un <b>perfil</b> muy preciso. Si se queda corta, la soldadura queda fría y falla. Si se pasa, se dañan los componentes o la tarjeta. Por eso el horno necesita un <b>control en lazo cerrado</b>.</p>
+    </div>
+    <div class="card" style="margin:0">
+      <svg viewBox="0 0 420 220" width="100%">
+        <defs><linearGradient id="gp" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset=".55" stop-color="#ff7a1a"/><stop offset=".8" stop-color="#ff5470"/><stop offset="1" stop-color="#3fb6ff"/></linearGradient></defs>
+        <line x1="40" y1="190" x2="410" y2="190" stroke="#2a3142"/><line x1="40" y1="20" x2="40" y2="190" stroke="#2a3142"/>
+        <polyline fill="none" stroke="url(#gp)" stroke-width="4" points="40,180 120,105 230,85 280,40 300,32 320,40 410,170"/>
+        <line x1="40" y1="32" x2="410" y2="32" stroke="#ff5470" stroke-dasharray="4 4" opacity=".5"/>
+        <text x="345" y="28" fill="#ff8aa0" font-size="11">≈ 245 °C</text>
+        <text x="60" y="205" fill="#9aa3b5" font-size="11">Precalent.</text>
+        <text x="150" y="205" fill="#9aa3b5" font-size="11">Remojo</text>
+        <text x="265" y="205" fill="#9aa3b5" font-size="11">Reflujo</text>
+        <text x="340" y="205" fill="#9aa3b5" font-size="11">Enfriam.</text>
+        <text x="8" y="105" fill="#9aa3b5" font-size="11" transform="rotate(-90 14 105)">Temperatura</text>
+        <text x="130" y="16" fill="#e7eaf0" font-size="12" font-weight="600">Perfil típico de reflujo</text>
+      </svg>
+    </div>
+  </div>
+
+  <h3>Lazo de control del horno (haz clic en cada bloque)</h3>
+  <div class="card">
+    <svg viewBox="0 0 900 250" width="100%" id="arch">
+      <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 z" fill="#9aa3b5"/></marker></defs>
+      <text x="10" y="112" fill="#9aa3b5" font-size="13">Temperatura</text><text x="10" y="128" fill="#9aa3b5" font-size="13">deseada</text>
+      <line x1="95" y1="115" x2="140" y2="115" stroke="#9aa3b5" stroke-width="2" marker-end="url(#ar)"/>
+      <g class="blk" data-i="c"><rect x="145" y="80" width="140" height="70" rx="10" fill="#1b2030" stroke="#46d39a" stroke-width="2"/><text x="215" y="110" fill="#46d39a" text-anchor="middle" font-weight="700">Controlador</text><text x="215" y="130" fill="#9aa3b5" text-anchor="middle" font-size="12">PLC: P + prealim.</text></g>
+      <line x1="285" y1="115" x2="335" y2="115" stroke="#9aa3b5" stroke-width="2" marker-end="url(#ar)"/>
+      <g class="blk" data-i="a"><rect x="340" y="80" width="150" height="70" rx="10" fill="#1b2030" stroke="#ff7a1a" stroke-width="2"/><text x="415" y="110" fill="#ffb067" text-anchor="middle" font-weight="700">Actuador</text><text x="415" y="130" fill="#9aa3b5" text-anchor="middle" font-size="12">SSR + resistencias</text></g>
+      <line x1="490" y1="115" x2="540" y2="115" stroke="#9aa3b5" stroke-width="2" marker-end="url(#ar)"/>
+      <g class="blk" data-i="p"><rect x="545" y="80" width="150" height="70" rx="10" fill="#1b2030" stroke="#ff7a1a" stroke-width="2"/><text x="620" y="110" fill="#ffb067" text-anchor="middle" font-weight="700">Planta</text><text x="620" y="130" fill="#9aa3b5" text-anchor="middle" font-size="12">Cámara del horno</text></g>
+      <line x1="695" y1="115" x2="800" y2="115" stroke="#9aa3b5" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="805" y="112" fill="#9aa3b5" font-size="13">Temperatura</text><text x="805" y="128" fill="#9aa3b5" font-size="13">real</text>
+      <g class="blk" data-i="d"><rect x="545" y="8" width="150" height="44" rx="10" fill="#1b2030" stroke="#ff5470" stroke-width="2"/><text x="620" y="35" fill="#ff8aa0" text-anchor="middle" font-weight="700">Perturbaciones</text></g>
+      <line x1="620" y1="52" x2="620" y2="76" stroke="#ff5470" stroke-width="2" marker-end="url(#ar)"/>
+      <polyline points="750,115 750,210 495,210" fill="none" stroke="#9aa3b5" stroke-width="2" marker-end="url(#ar)"/>
+      <g class="blk" data-i="s"><rect x="340" y="185" width="150" height="50" rx="10" fill="#1b2030" stroke="#3fb6ff" stroke-width="2"/><text x="415" y="215" fill="#3fb6ff" text-anchor="middle" font-weight="700">Sensor: termopar K</text></g>
+      <polyline points="340,210 215,210 215,154" fill="none" stroke="#9aa3b5" stroke-width="2" marker-end="url(#ar)"/>
+    </svg>
+    <div id="info">Selecciona un bloque para ver su función dentro del horno.</div>
+  </div>
+
+  <div class="grid3">
+    <div class="comp"><b>Planta</b>La cámara del horno, con su aire, sus paredes y las tarjetas. Es lo que se calienta.<br><small>Variable controlada: temperatura T(t) [°C]</small></div>
+    <div class="comp s"><b>Sensor (transductor)</b>Termopar tipo K con transmisor. Convierte la temperatura en una señal eléctrica.<br><small>Ganancia unitaria: H(s) = 1</small></div>
+    <div class="comp c"><b>Controlador</b>PLC con control proporcional (Kp) y prealimentación (Kff), que calcula la potencia que hace falta.<br><small>Señal de control: potencia q(t) [W]</small></div>
+    <div class="comp"><b>Actuador</b>Relé de estado sólido (SSR) que maneja las resistencias calefactoras y los ventiladores de convección.<br><small>Entrega calor al horno</small></div>
+    <div class="comp d"><b>Perturbaciones</b>Tarjetas frías que entran por la banda, aire que entra por las aberturas, cambios del ambiente y del voltaje de la red.<br><small>Modeladas como pérdida de potencia Pd</small></div>
+    <div class="comp s"><b>Referencia</b>La temperatura del perfil en la zona de reflujo, cerca de 245 °C.<br><small>Ambiente: Ta = 25 °C</small></div>
+  </div>
+</section>
+
+<!-- ================= 2 ================= -->
+<section id="s2">
+  <div class="num">SECCIÓN 2</div>
+  <h2>Modelado Matemático Físico</h2>
+  <p>El horno se modela con una analogía <b>eléctrica-térmica</b>. La capacitancia térmica <b>C</b> es la capacidad de guardar calor, como un capacitor. La resistencia térmica <b>R</b> es la oposición a que el calor escape al ambiente, como un resistor.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Paso 1. Balance de energía</h3>
+      <p>Calor que se guarda = calor que entra − calor que se pierde:</p>
+      <div class="eq">\[ C\,\frac{dT(t)}{dt} = q(t) - \frac{T(t)-T_a}{R} \]</div>
+      <h3>Paso 2. Variable de desviación</h3>
+      <p>Se mide la temperatura por encima del ambiente: \( \theta(t) = T(t) - T_a \).</p>
+      <div class="eq">\[ RC\,\frac{d\theta(t)}{dt} + \theta(t) = R\,q(t) \]</div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Paso 3. Transformada de Laplace</h3>
+      <p>Con condiciones iniciales cero:</p>
+      <div class="eq">\[ RC\,s\,\Theta(s) + \Theta(s) = R\,Q(s) \]</div>
+      <h3>Paso 4. Función de transferencia de la planta</h3>
+      <div class="eq">\[ G(s) = \frac{\Theta(s)}{Q(s)} = \frac{R}{RC\,s+1} = \frac{K}{\tau s + 1} \]</div>
+      <p>Es un sistema de <b>primer orden</b> con ganancia \(K = R\) y constante de tiempo \(\tau = RC\).</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Parámetros utilizados</h3>
+    <table>
+      <tr><th>Parámetro</th><th>Símbolo</th><th>Valor</th><th>Unidad</th></tr>
+      <tr><td>Resistencia térmica</td><td>R</td><td>0.05</td><td>°C/W</td></tr>
+      <tr><td>Capacitancia térmica</td><td>C</td><td>4000</td><td>J/°C</td></tr>
+      <tr><td>Constante de tiempo</td><td>τ = RC</td><td>200</td><td>s</td></tr>
+      <tr><td>Ganancia de la planta</td><td>K = R</td><td>0.05</td><td>°C/W</td></tr>
+      <tr><td>Ganancia proporcional</td><td>Kp</td><td>200</td><td>W/°C</td></tr>
+      <tr><td>Prealimentación</td><td>Kff = 1/K</td><td>20</td><td>W/°C</td></tr>
+    </table>
+    <div class="eq">\[ G(s) = \frac{0.05}{200\,s + 1} \]</div>
+  </div>
+
+  <div class="note"><b>¿Hace falta linealizar?</b> La pérdida por convección ya es lineal, así que el modelo no necesita linealización. Si se tomara en cuenta la <b>radiación</b> (\(q_{rad}=\varepsilon\sigma A T^4\)), esa parte sí es no lineal. Se linealiza con Serie de Taylor alrededor del punto de operación \(T_0\):
+  \[ q_{rad} \approx \varepsilon\sigma A T_0^4 + 4\varepsilon\sigma A T_0^3\,(T-T_0) \]
+  El término \(4\varepsilon\sigma A T_0^3\) es una conductancia extra que se suma a \(1/R\). La forma de primer orden de G(s) no cambia.</div>
+</section>
+
+<!-- ================= 3 ================= -->
+<section id="s3">
+  <div class="num">SECCIÓN 3</div>
+  <h2>Diagrama de Bloques y Reducción</h2>
+  <p>El controlador combina dos acciones. La <b>prealimentación (Kff)</b> calcula de antemano la potencia necesaria. La <b>acción proporcional (Kp)</b> corrige el error que mide el sensor, en lazo cerrado negativo.</p>
+
+  <div class="card">
+    <svg viewBox="0 0 900 270" width="100%">
+      <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 z" fill="#c9cfdb"/></marker></defs>
+      <g stroke="#c9cfdb" stroke-width="2" fill="none">
+        <line x1="40" y1="150" x2="164" y2="150" marker-end="url(#a2)"/>
+        <polyline points="90,150 90,60 240,60" marker-end="url(#a2)"/>
+        <polyline points="320,60 420,60 420,134" marker-end="url(#a2)"/>
+        <line x1="196" y1="150" x2="240" y2="150" marker-end="url(#a2)"/>
+        <line x1="320" y1="150" x2="404" y2="150" marker-end="url(#a2)"/>
+        <line x1="436" y1="150" x2="494" y2="150" marker-end="url(#a2)"/>
+        <line x1="510" y1="80" x2="510" y2="134" marker-end="url(#a2)"/>
+        <line x1="526" y1="150" x2="580" y2="150" marker-end="url(#a2)"/>
+        <line x1="700" y1="150" x2="850" y2="150" marker-end="url(#a2)"/>
+        <polyline points="780,150 780,235 520,235"  marker-end="url(#a2)"/>
+        <polyline points="440,235 180,235 180,166" marker-end="url(#a2)"/>
+      </g>
+      <circle cx="90" cy="150" r="4" fill="#c9cfdb"/><circle cx="780" cy="150" r="4" fill="#c9cfdb"/>
+      <g fill="#1b2030" stroke-width="2">
+        <circle cx="180" cy="150" r="16" stroke="#46d39a"/><circle cx="420" cy="150" r="16" stroke="#46d39a"/><circle cx="510" cy="150" r="16" stroke="#ff5470"/>
+        <rect x="240" y="125" width="80" height="50" rx="8" stroke="#46d39a"/>
+        <rect x="240" y="35" width="80" height="50" rx="8" stroke="#46d39a"/>
+        <rect x="580" y="120" width="120" height="60" rx="8" stroke="#ff7a1a"/>
+        <rect x="440" y="212" width="80" height="46" rx="8" stroke="#3fb6ff"/>
+      </g>
+      <g fill="#e7eaf0" font-size="15" text-anchor="middle">
+        <text x="180" y="155">Σ</text><text x="420" y="155">Σ</text><text x="510" y="155">Σ</text>
+        <text x="280" y="155" font-weight="700">Kp</text><text x="280" y="65" font-weight="700">Kff</text>
+        <text x="640" y="147" font-weight="700">G(s)</text><text x="640" y="168" font-size="12" fill="#9aa3b5">K/(τs+1)</text>
+        <text x="480" y="240" font-weight="700">H = 1</text>
+      </g>
+      <g fill="#9aa3b5" font-size="13">
+        <text x="20" y="140">R(s)</text><text x="855" y="140">Θ(s)</text><text x="200" y="110" fill="#e7eaf0">E(s)</text>
+        <text x="152" y="140">+</text><text x="186" y="182" fill="#ff8aa0" font-size="16">−</text>
+        <text x="400" y="140">+</text><text x="426" y="128">+</text><text x="448" y="140">Q(s)</text>
+        <text x="488" y="140">+</text><text x="516" y="128" fill="#ff8aa0">+</text>
+        <text x="485" y="72" fill="#ff8aa0">Pd(s)</text>
+      </g>
+    </svg>
+  </div>
+
+  <h3>Reducción paso a paso por álgebra de bloques</h3>
+  <div class="steps" id="stepBtns">
+    <button class="act" data-s="0">Paso 1</button><button data-s="1">Paso 2</button><button data-s="2">Paso 3</button><button data-s="3">Resultado</button><button data-s="4">Perturbación</button>
+  </div>
+  <div class="card">
+    <div class="step act"><b>Ecuaciones de los bloques.</b> La potencia que llega al horno es la suma de las dos ramas del controlador:
+      \[ Q(s) = K_p\,[R(s)-\Theta(s)] + K_{ff}\,R(s), \qquad \Theta(s) = G(s)\,Q(s) \]</div>
+    <div class="step"><b>Reducir el lazo de realimentación.</b> Se agrupan los términos de Θ(s):
+      \[ \Theta(s)\,[1 + K_p G(s)] = (K_p + K_{ff})\,G(s)\,R(s) \]
+      El lazo interno Kp con G(s) y H = 1 se reduce a \( \dfrac{G}{1+K_pG} \).</div>
+    <div class="step"><b>Ramas en paralelo.</b> Kp y Kff salen del mismo punto R(s), así que se suman: \( (K_p + K_{ff}) \). Se reemplaza \(G = K/(\tau s+1)\):
+      \[ T(s) = \frac{\Theta(s)}{R(s)} = \frac{(K_p+K_{ff})\,G}{1+K_p G} = \frac{K(K_p+K_{ff})}{\tau s + 1 + K K_p} \]</div>
+    <div class="step"><b>Función de transferencia en lazo cerrado</b> con los valores numéricos (\(K K_p = 10\), \(K K_{ff} = 1\)):
+      \[ T(s) = \frac{0.05\,(200+20)}{200\,s + 1 + 10} = \frac{11}{200\,s + 11} \]
+      En comparación, el <b>lazo abierto</b> (solo prealimentación) queda:
+      \[ T_{LA}(s) = K_{ff}\,G(s) = \frac{1}{200\,s+1} \]</div>
+    <div class="step"><b>Respuesta a la perturbación.</b> Con R = 0, la pérdida de calor Pd entra antes de la planta:
+      \[ \frac{\Theta(s)}{P_d(s)}\Big|_{LC} = \frac{G}{1+K_pG} = \frac{0.05}{200\,s+11} \qquad \frac{\Theta(s)}{P_d(s)}\Big|_{LA} = G = \frac{0.05}{200\,s+1} \]
+      El lazo cerrado reduce el efecto de la perturbación <b>11 veces</b>.</div>
+  </div>
+</section>
+
+<!-- ================= 4 ================= -->
+<section id="s4">
+  <div class="num">SECCIÓN 4</div>
+  <h2>Simulador Interactivo</h2>
+  <p>Mueve los controles y mira cómo cambia la temperatura del horno. La curva <span class="ol"><b>naranja</b></span> es el lazo abierto y la <span class="cl"><b>azul</b></span> es el lazo cerrado. Cerca del final de la simulación entra una perturbación, por ejemplo una tanda de tarjetas frías.</p>
+  <div class="note">La prealimentación está diseñada con el valor nominal R = 0.05. Si cambias R, el lazo abierto ya no llega a la temperatura deseada, pero el lazo cerrado la corrige casi por completo.</div>
+  <div class="card sim">
+    <div class="ctrl">
+      <label>Resistencia térmica R <span id="vR"></span></label><input type="range" id="R" min="0.02" max="0.10" step="0.005" value="0.05">
+      <label>Capacitancia térmica C <span id="vC"></span></label><input type="range" id="C" min="1000" max="8000" step="250" value="4000">
+      <label>Ganancia del controlador Kp <span id="vKp"></span></label><input type="range" id="Kp" min="0" max="600" step="10" value="200">
+      <label>Temperatura deseada <span id="vT"></span></label><input type="range" id="Tset" min="100" max="260" step="5" value="245">
+      <label>Perturbación Pd <span id="vD"></span></label><input type="range" id="Pd" min="-3000" max="0" step="100" value="-1000">
+      <div class="chk"><input type="checkbox" id="ff" checked><label for="ff" style="margin:0;color:var(--txt)">Usar prealimentación en lazo cerrado</label></div>
+      <div style="margin-top:18px;font-size:.85rem;color:var(--mut)">Polos en el plano s</div>
+      <canvas id="pz"></canvas>
+    </div>
+    <div>
+      <canvas id="plot"></canvas>
+      <div class="read">
+        <div><small>τ (constante de tiempo)</small><b id="rTau"></b></div>
+        <div><small>Polo lazo abierto</small><b class="ol" id="rPOL"></b></div>
+        <div><small>Polo lazo cerrado</small><b class="cl" id="rPCL"></b></div>
+        <div><small>Mejora de rapidez</small><b id="rX"></b></div>
+        <div><small>t. estab. lazo abierto</small><b class="ol" id="rTsOL"></b></div>
+        <div><small>t. estab. lazo cerrado</small><b class="cl" id="rTsCL"></b></div>
+        <div><small>T final lazo abierto</small><b class="ol" id="rFOL"></b></div>
+        <div><small>T final lazo cerrado</small><b class="cl" id="rFCL"></b></div>
+      </div>
+      <div class="eq" style="margin-top:12px;font-family:monospace;font-size:.9rem" id="tfs"></div>
+    </div>
+  </div>
+
+  <h3>Validación en GNU Octave</h3>
+  <p>Este script calcula las funciones de transferencia, los polos y los valores finales, y genera las gráficas de comprobación.</p>
+  <div class="cbar"><b style="color:var(--mut)">horno_reflujo.m</b><button class="btn" id="copy">Copiar código</button></div>
+<pre id="code">% =========================================================
+% Proyecto ELEC-5308 - Tema 4: Control termico en horno de reflujo SMD
+% Estudiante: Daniel Miranda Martinez
+% =========================================================
+pkg load control
+clc; clear; close all;
+
+% ---------- Parametros del horno ----------
+R   = 0.05;      % Resistencia termica [°C/W]
+C   = 4000;      % Capacitancia termica [J/°C]
+tau = R*C;       % Constante de tiempo [s]
+K   = R;         % Ganancia de la planta [°C/W]
+
+% ---------- Controlador ----------
+Kp  = 200;       % Ganancia proporcional [W/°C]
+Kff = 1/K;       % Prealimentacion [W/°C]
+
+% ---------- Funciones de transferencia ----------
+s = tf('s');
+G = K/(tau*s + 1);               % Planta: horno
+
+T_LA = Kff*G;                    % Lazo abierto (solo prealimentacion)
+T_P  = feedback(Kp*G, 1);        % Lazo cerrado solo proporcional
+T_LC = (Kp + Kff)*feedback(G, Kp); % Lazo cerrado + prealimentacion
+
+% ---------- Resultados en pantalla ----------
+disp('===== PLANTA G(s) ====='); G
+disp('===== LAZO ABIERTO ====='); T_LA
+disp('===== LAZO CERRADO (P + prealimentacion) ====='); T_LC
+
+p_LA = pole(T_LA);  p_P = pole(T_P);  p_LC = pole(T_LC);
+printf('\nPolo lazo abierto:            %.4f\n', p_LA);
+printf('Polo lazo cerrado:            %.4f\n', p_LC);
+printf('Ceros lazo cerrado:           %s\n', mat2str(zero(T_LC)));
+printf('\nValor final lazo abierto:     %.4f\n', dcgain(T_LA));
+printf('Valor final solo P:           %.4f\n', dcgain(T_P));
+printf('Valor final P + prealim.:     %.4f\n', dcgain(T_LC));
+printf('\nTiempo de estab. lazo abierto (4*tau): %.1f s\n', 4/abs(p_LA));
+printf('Tiempo de estab. lazo cerrado:         %.1f s\n', 4/abs(p_LC));
+
+% ---------- Figura 1: Respuesta al escalon ----------
+t = 0:1:1000;
+y_LA = step(T_LA, t);
+y_P  = step(T_P,  t);
+y_LC = step(T_LC, t);
+
+figure(1);
+plot(t, y_LA, 'k--', 'LineWidth', 2); hold on;
+plot(t, y_P,  'k:',  'LineWidth', 2);
+plot(t, y_LC, 'k-',  'LineWidth', 2);
+grid on;
+xlabel('Tiempo [s]'); ylabel('Temperatura (normalizada)');
+title('Respuesta al escalon - Horno de reflujo');
+legend('Lazo abierto', 'Lazo cerrado solo P', 'Lazo cerrado P + prealimentacion', ...
+       'Location', 'southeast');
+
+% ---------- Figura 2: Mapa de polos ----------
+figure(2);
+plot(real(p_LA), imag(p_LA), 'kx', 'MarkerSize', 14, 'LineWidth', 2); hold on;
+plot(real(p_LC), imag(p_LC), 'ko', 'MarkerSize', 12, 'LineWidth', 2);
+grid on; xlim([-0.07 0.01]); ylim([-0.02 0.02]);
+xlabel('Parte real'); ylabel('Parte imaginaria');
+title('Ubicacion de polos');
+legend('Lazo abierto', 'Lazo cerrado', 'Location', 'northwest');
+
+% ---------- Figura 3: Perturbacion (se abre la puerta / entra una tarjeta fria) ----------
+Pd = -1000;                       % Perdida de calor de 1000 W
+yd_LA = Pd*step(G, t);
+yd_LC = Pd*step(feedback(G, Kp), t);
+
+figure(3);
+plot(t, yd_LA, 'k--', 'LineWidth', 2); hold on;
+plot(t, yd_LC, 'k-',  'LineWidth', 2);
+grid on;
+xlabel('Tiempo [s]'); ylabel('Caida de temperatura [°C]');
+title('Efecto de una perturbacion de -1000 W');
+legend('Lazo abierto', 'Lazo cerrado', 'Location', 'southwest');</pre>
+
+  <h3>Capturas de GNU Octave</h3>
+  <div class="grid2">
+    <figure style="text-align:left"><pre style="margin:0;max-height:none">Polo lazo abierto:            -0.0050
+Polo lazo cerrado:            -0.0550
+Ceros lazo cerrado:           []
+
+Valor final lazo abierto:     1.0000
+Valor final solo P:           0.9091
+Valor final P + prealim.:     1.0000
+
+Tiempo de estab. lazo abierto: 800.0 s
+Tiempo de estab. lazo cerrado:  72.7 s</pre><figcaption>Resultados numéricos del script: polos, valores finales y tiempos de estabilización</figcaption></figure>
+    <figure><img src="fig1.png" alt="Respuesta al escalón" onerror="this.parentNode.classList.add('missing')"><figcaption>Figura 1. Respuesta al escalón: lazo abierto contra lazo cerrado</figcaption></figure>
+    <figure><img src="fig2.png" alt="Mapa de polos" onerror="this.parentNode.classList.add('missing')"><figcaption>Figura 2. Ubicación de los polos en el plano s</figcaption></figure>
+    <figure><img src="fig3.png" alt="Perturbación" onerror="this.parentNode.classList.add('missing')"><figcaption>Figura 3. Efecto de una perturbación de −1000 W</figcaption></figure>
+  </div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section id="s5">
+  <div class="num">SECCIÓN 5</div>
+  <h2>Análisis de Estabilidad y Conclusiones</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Polos y ceros</h3>
+      <table>
+        <tr><th>Sistema</th><th>Polo</th><th>Ceros</th><th>¿Estable?</th></tr>
+        <tr><td>Lazo abierto</td><td>s = −1/200 = <b>−0.005</b></td><td>Ninguno</td><td>Sí</td></tr>
+        <tr><td>Lazo cerrado</td><td>s = −11/200 = <b>−0.055</b></td><td>Ninguno</td><td>Sí</td></tr>
+      </table>
+      <p style="margin-top:12px">Los dos polos son reales y negativos, así que el sistema es <b>estable</b> y no oscila. El control en lazo cerrado mueve el polo <b>11 veces más a la izquierda</b>, y por eso responde 11 veces más rápido.</p>
+      <table>
+        <tr><th></th><th>Constante de tiempo</th><th>Tiempo de estabilización (4τ)</th></tr>
+        <tr><td>Lazo abierto</td><td>200 s</td><td>800 s ≈ 13.3 min</td></tr>
+        <tr><td>Lazo cerrado</td><td>18.2 s</td><td>72.7 s ≈ 1.2 min</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Teorema del Valor Final</h3>
+      <p>Para una entrada escalón unitario \(R(s)=1/s\):</p>
+      <div class="eq">\[ \theta_{ss} = \lim_{s\to0} s\,T(s)\,\frac{1}{s} = T(0) \]</div>
+      <table>
+        <tr><th>Caso</th><th>Valor final</th><th>Error</th></tr>
+        <tr><td>Lazo abierto: \(\frac{1}{200s+1}\)</td><td>1</td><td>0 %*</td></tr>
+        <tr><td>Solo P: \(\frac{10}{200s+11}\)</td><td>10/11 = 0.909</td><td>9.1 %</td></tr>
+        <tr><td>P + prealim.: \(\frac{11}{200s+11}\)</td><td><b>1</b></td><td><b>0 %</b></td></tr>
+      </table>
+      <p style="margin-top:10px;font-size:.88rem;color:var(--mut)">*Solo si el modelo es perfecto. Si R cambia, el lazo abierto pierde exactitud.</p>
+      <p><b>Perturbación de −1000 W:</b> en lazo abierto la temperatura baja 0.05·1000 = <b>50 °C</b>. En lazo cerrado baja solo 50/11 ≈ <b>4.5 °C</b>.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Conclusiones de ingeniería</h3>
+    <ul class="concl">
+      <li>El horno de reflujo se puede modelar como un sistema térmico de <b>primer orden</b>, \(G(s)=R/(RCs+1)\), obtenido del balance de energía.</li>
+      <li>El <b>lazo cerrado</b> hace que el horno llegue a su temperatura unas <b>11 veces más rápido</b>: de unos 13 minutos a poco más de 1 minuto.</li>
+      <li>La <b>prealimentación</b> elimina el error en estado estable que deja el control proporcional solo (9.1 %).</li>
+      <li>Ante una <b>perturbación</b>, como la entrada de tarjetas frías, el lazo cerrado reduce la caída de temperatura de 50 °C a unos 4.5 °C. Eso protege la calidad de la soldadura.</li>
+      <li>Si cambian los parámetros reales del horno, el lazo abierto se equivoca y el lazo cerrado se corrige solo. Por eso la industria usa realimentación.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>Daniel Miranda Martínez · Análisis de Sistemas ELEC-5308 · Universidad Hispanoamericana · 2026<br>Página desarrollada con apoyo de inteligencia artificial. Modelo verificado en GNU Octave.</footer>
+
+<script>
+// ---- Arquitectura: info de bloques ----
+const INFO={
+ c:'<b>Controlador (PLC):</b> compara la temperatura deseada con la medida y calcula la potencia: q = Kp·error + Kff·referencia.',
+ a:'<b>Actuador:</b> un relé de estado sólido (SSR) enciende y apaga las resistencias calefactoras para entregar la potencia que pide el controlador.',
+ p:'<b>Planta:</b> la cámara del horno con las tarjetas. Guarda calor (capacitancia C) y lo pierde hacia el ambiente (resistencia R).',
+ s:'<b>Sensor:</b> un termopar tipo K mide la temperatura y la envía al controlador para cerrar el lazo.',
+ d:'<b>Perturbaciones:</b> tarjetas frías que entran por la banda, aire que entra por las aberturas, cambios del ambiente o del voltaje.'
+};
+document.querySelectorAll('#arch .blk').forEach(g=>g.addEventListener('click',()=>{document.getElementById('info').innerHTML=INFO[g.dataset.i]}));
+
+// ---- Pasos de reducción ----
+const sb=document.querySelectorAll('#stepBtns button'), st=document.querySelectorAll('.step');
+sb.forEach(b=>b.addEventListener('click',()=>{sb.forEach(x=>x.classList.remove('act'));st.forEach(x=>x.classList.remove('act'));b.classList.add('act');st[b.dataset.s].classList.add('act')}));
+
+// ---- Nav activa ----
+const links=document.querySelectorAll('nav a');
+addEventListener('scroll',()=>{let cur='';document.querySelectorAll('section').forEach(s=>{if(scrollY>=s.offsetTop-120)cur=s.id});links.forEach(a=>a.classList.toggle('act',a.getAttribute('href')==='#'+cur))});
+
+// ---- Copiar código ----
+document.getElementById('copy').onclick=function(){navigator.clipboard.writeText(document.getElementById('code').innerText).then(()=>{this.textContent='¡Copiado!';setTimeout(()=>this.textContent='Copiar código',1500)})};
+
+// ---- Simulador ----
+const $=id=>document.getElementById(id);
+const Ta=25, KFF_NOM=1/0.05;
+function setupCanvas(c){const d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return [x,w,h]}
+function nice(v){const p=Math.pow(10,Math.floor(Math.log10(v)));const f=v/p;return (f<1.5?1:f<3?2:f<7?5:10)*p}
+
+function sim(){
+  const R=+$('R').value, C=+$('C').value, Kp=+$('Kp').value, Tset=+$('Tset').value, Pd=+$('Pd').value, ff=$('ff').checked;
+  $('vR').textContent=R.toFixed(3)+' °C/W'; $('vC').textContent=C+' J/°C'; $('vKp').textContent=Kp+' W/°C';
+  $('vT').textContent=Tset+' °C'; $('vD').textContent=Pd+' W';
+  const K=R, tau=R*C, r=Tset-Ta, KffCL=ff?KFF_NOM:0;
+  const tauCL=tau/(1+K*Kp), pOL=-1/tau, pCL=-1/tauCL;
+  const ssOL=K*KFF_NOM*r, ssCL=K*(Kp+KffCL)/(1+K*Kp)*r;
+  const dOL=K*Pd, dCL=K*Pd/(1+K*Kp);
+  const tmax=7*tau, td=4.5*tau, N=500;
+  const tt=[],yo=[],yc=[];
+  for(let i=0;i<=N;i++){const t=tmax*i/N;let a=ssOL*(1-Math.exp(-t/tau)),b=ssCL*(1-Math.exp(-t/tauCL));
+    if(t>td){a+=dOL*(1-Math.exp(-(t-td)/tau));b+=dCL*(1-Math.exp(-(t-td)/tauCL))}
+    tt.push(t);yo.push(Ta+a);yc.push(Ta+b)}
+  // lecturas
+  $('rTau').textContent=tau.toFixed(0)+' s'; $('rPOL').textContent=pOL.toFixed(4); $('rPCL').textContent=pCL.toFixed(4);
+  $('rX').textContent=(tau/tauCL).toFixed(1)+'×'; $('rTsOL').textContent=(4*tau).toFixed(0)+' s'; $('rTsCL').textContent=(4*tauCL).toFixed(1)+' s';
+  $('rFOL').textContent=(Ta+ssOL).toFixed(1)+' °C'; $('rFCL').textContent=(Ta+ssCL).toFixed(1)+' °C';
+  $('tfs').innerHTML='G(s) = '+K.toFixed(3)+' / ('+tau.toFixed(0)+'s + 1)<br>T<sub>LA</sub>(s) = '+(K*KFF_NOM).toFixed(3)+' / ('+tau.toFixed(0)+'s + 1)<br>T<sub>LC</sub>(s) = '+(K*(Kp+KffCL)).toFixed(3)+' / ('+tau.toFixed(0)+'s + '+(1+K*Kp).toFixed(2)+')';
+  drawPlot(tt,yo,yc,Tset,td,tmax); drawPZ(pOL,pCL);
+}
+
+function drawPlot(tt,yo,yc,Tset,td,tmax){
+  const [x,w,h]=setupCanvas($('plot')); const L=54,Rm=16,T=18,B=40;
+  const ymax=Math.max(...yo,...yc,Tset)*1.08, ymin=0;
+  const X=t=>L+(w-L-Rm)*t/tmax, Y=v=>h-B-(h-T-B)*(v-ymin)/(ymax-ymin);
+  x.clearRect(0,0,w,h); x.font='12px system-ui'; x.fillStyle='#9aa3b5'; x.strokeStyle='#232a3a'; x.lineWidth=1;
+  const dy=nice(ymax/6); for(let v=0;v<=ymax;v+=dy){x.beginPath();x.moveTo(L,Y(v));x.lineTo(w-Rm,Y(v));x.stroke();x.fillText(v.toFixed(0),8,Y(v)+4)}
+  const dx=nice(tmax/8); for(let t=0;t<=tmax;t+=dx){x.beginPath();x.moveTo(X(t),T);x.lineTo(X(t),h-B);x.stroke();x.fillText(t.toFixed(0),X(t)-10,h-B+16)}
+  x.fillText('Tiempo [s]',w/2-25,h-6); x.save();x.translate(14,h/2+40);x.rotate(-Math.PI/2);x.fillText('Temperatura [°C]',0,0);x.restore();
+  // referencia
+  x.setLineDash([6,5]);x.strokeStyle='#46d39a';x.beginPath();x.moveTo(L,Y(Tset));x.lineTo(w-Rm,Y(Tset));x.stroke();
+  x.strokeStyle='#ff5470';x.beginPath();x.moveTo(X(td),T);x.lineTo(X(td),h-B);x.stroke();x.setLineDash([]);
+  x.fillStyle='#ff8aa0';x.fillText('Perturbación',X(td)+5,T+14);
+  const line=(arr,c)=>{x.strokeStyle=c;x.lineWidth=2.5;x.beginPath();arr.forEach((v,i)=>{i?x.lineTo(X(tt[i]),Y(v)):x.moveTo(X(tt[i]),Y(v))});x.stroke()};
+  line(yo,'#ff7a1a'); line(yc,'#3fb6ff');
+  // leyenda
+  const lg=[['Lazo abierto','#ff7a1a'],['Lazo cerrado','#3fb6ff'],['Referencia','#46d39a']];
+  lg.forEach((l,i)=>{const lx=w-Rm-130,ly=h-B-70+i*18;x.fillStyle=l[1];x.fillRect(lx,ly-6,16,4);x.fillStyle='#e7eaf0';x.fillText(l[0],lx+22,ly)});
+}
+
+function drawPZ(pOL,pCL){
+  const [x,w,h]=setupCanvas($('pz')); const m=Math.max(Math.abs(pOL),Math.abs(pCL));
+  const xmin=-1.25*m, xmax=0.25*m, X=v=>20+(w-40)*(v-xmin)/(xmax-xmin), cy=h/2;
+  x.clearRect(0,0,w,h); x.strokeStyle='#3a4254'; x.lineWidth=1;
+  x.beginPath();x.moveTo(10,cy);x.lineTo(w-10,cy);x.stroke(); x.beginPath();x.moveTo(X(0),10);x.lineTo(X(0),h-10);x.stroke();
+  x.fillStyle='rgba(70,211,154,.06)';x.fillRect(10,10,X(0)-10,h-20);
+  x.font='11px system-ui';x.fillStyle='#9aa3b5';x.fillText('Re',w-26,cy-6);x.fillText('Im',X(0)+5,20);x.fillText('Zona estable',16,22);
+  // X lazo abierto
+  x.strokeStyle='#ff7a1a';x.lineWidth=3;const a=X(pOL);x.beginPath();x.moveTo(a-7,cy-7);x.lineTo(a+7,cy+7);x.moveTo(a+7,cy-7);x.lineTo(a-7,cy+7);x.stroke();
+  x.fillStyle='#ff7a1a';x.fillText(pOL.toFixed(4),a-20,cy+26);
+  // O lazo cerrado
+  x.strokeStyle='#3fb6ff';const b=X(pCL);x.beginPath();x.arc(b,cy,8,0,7);x.stroke();
+  x.fillStyle='#3fb6ff';x.fillText(pCL.toFixed(4),b-20,cy-16);
+}
+
+['R','C','Kp','Tset','Pd','ff'].forEach(id=>$(id).addEventListener('input',sim));
+addEventListener('resize',sim); sim();
+</script>
+</body>
+</html>
